@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIOTTO — #034 the Missing Piece Seeker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0ede6;
+    --paper: #fdfcfa;
+    --ink: #111010;
+    --faint: #b8b4ac;
+    --accent: #9a8260;
+    --zone-a: #e8e4dc;
+    --zone-b: #e4e0d8;
+    --zone-c: #f7f3ec;
+    --zone-d: #e8e4dc;
+    --zone-e: #dedad2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 20px 32px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    background: var(--paper);
+  }
+  .header-title {
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: var(--faint);
+  }
+  .header-title span { color: var(--accent); }
+  .ver { font-family: 'Crimson Pro', serif; font-size: 11px; color: var(--faint); }
+
+  /* ── API KEY BAR ── */
+  .api-bar {
+    background: #ede9e1;
+    padding: 10px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
+  .api-bar label {
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+  .api-bar input {
+    flex: 1;
+    max-width: 360px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--faint);
+    padding: 2px 4px;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--ink);
+    outline: none;
+  }
+  .api-bar input:focus { border-bottom-color: var(--accent); }
+  .api-save-btn {
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    background: none;
+    border: 1px solid var(--faint);
+    color: var(--faint);
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .api-save-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── MAIN ── */
+  main { padding: 28px 32px 48px; max-width: 1100px; margin: 0 auto; }
+
+  /* ── STEP INDICATOR ── */
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 12px;
+    color: var(--faint);
+    letter-spacing: 0.08em;
+  }
+  .step.active { color: var(--accent); }
+  .step.done { color: var(--ink); }
+  .step-num {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+  .step.active .step-num { background: var(--accent); color: white; border-color: var(--accent); }
+  .step.done .step-num { background: var(--ink); color: white; border-color: var(--ink); }
+  .step-sep { color: var(--faint); font-size: 10px; }
+
+  /* ── PHASE 1: ONE QUESTION ── */
+  #phase-1 {
+    background: var(--paper);
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 40px 48px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .big-question {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.9;
+    letter-spacing: 0.05em;
+    margin-bottom: 32px;
+    color: var(--ink);
+  }
+  .big-question em {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 20px;
+  }
+  .input-area {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--faint);
+    padding: 8px 0;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    line-height: 1.8;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+  .input-area:focus { border-bottom-color: var(--accent); }
+  .input-hint {
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    color: var(--faint);
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+  }
+  .submit-btn {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .submit-btn:hover { background: var(--accent); }
+  .submit-btn:disabled { background: var(--faint); cursor: not-allowed; }
+
+  /* ── PHASE 2: ZONE C PROPOSALS ── */
+  #phase-2 { display: none; }
+  .phase2-header {
+    margin-bottom: 24px;
+  }
+  .phase2-header h2 {
+    font-size: 13px;
+    font-family: 'Crimson Pro', serif;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .phase2-header p {
+    font-size: 13px;
+    color: var(--faint);
+    line-height: 1.7;
+  }
+  .proposals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .proposal-card {
+    background: var(--zone-c);
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .proposal-card:hover { border-color: var(--accent); }
+  .proposal-card.selected {
+    border-color: var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .proposal-type {
+    font-family: 'Crimson Pro', serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--faint);
+    margin-bottom: 10px;
+  }
+  .proposal-text {
+    font-size: 12px;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+  .proposal-edit {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--faint);
+    padding: 4px 0;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 12px;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    line-height: 1.8;
+    min-height: 60px;
+    margin-top: 8px;
+    display: none;
+  }
+  .edit-toggle {
+    font-family: 'Crimson Pro', serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .next-btn {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .next-btn:hover { background: var(--accent); }
+  .next-btn:disabled { background: var(--faint); cursor: not-allowed; }
+
+  /* ── PHASE 3: 5 ZONES ── */
+  #phase-3 { display: none; }
+  .zones-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .zone {
+    background: var(--paper);
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 20px;
+    position: relative;
+    min-height: 180px;
+  }
+  .zone-c {
+    grid-row: 1 / 3;
+    grid-column: 3;
+    background: var(--zone-c);
+    border-left: 3px solid var(--accent);
+    min-height: 380px;
+  }
+  .zone-e {
+    border-left: 3px solid var(--ink);
+  }
+  .zone-label {
+    font-family: 'Crimson Pro', serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--faint);
+    margin-bottom: 6px;
+  }
+  .zone-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    letter-spacing: 0.03em;
+  }
+  .zone-content {
+    font-size: 12px;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+  .zone-content textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--faint);
+    padding: 4px 0;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 11px;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    line-height: 1.8;
+    min-height: 60px;
+  }
+  .zone-content textarea:focus { border-bottom-color: var(--accent); }
+  .zone-suggest {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: rgba(154,130,96,0.07);
+    border-left: 2px solid var(--accent);
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    color: var(--accent);
+    line-height: 1.6;
+  }
+  .zone-suggest-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--faint);
+    margin-bottom: 4px;
+  }
+  .zone-tags {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+  }
+  .zone-tag {
+    font-family: 'Crimson Pro', serif;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--faint);
+    padding: 2px 8px;
+    color: var(--faint);
+  }
+  .claim-display {
+    font-size: 13px;
+    line-height: 2;
+    color: var(--ink);
+    padding: 4px 0;
+  }
+
+  /* ── FOOTER ACTIONS ── */
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    color: var(--faint);
+  }
+  .reset-btn {
+    background: none;
+    border: none;
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .reset-btn:hover { color: var(--ink); }
+
+  /* ── LOADING ── */
+  .loading {
+    display: flex; align-items: center; gap: 10px;
+    padding: 20px 0;
+    font-family: 'Crimson Pro', serif;
+    font-size: 12px;
+    color: var(--faint);
+    letter-spacing: 0.1em;
+  }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 1px solid var(--faint);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    color: #c0392b;
+    font-family: 'Crimson Pro', serif;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-left: 2px solid #c0392b;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 768px) {
+    main { padding: 20px 16px; }
+    .proposals-grid { grid-template-columns: 1fr; }
+    .zones-grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+    .zone-c { grid-row: auto; grid-column: auto; min-height: 200px; }
+    #phase-1 { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">GIOTTO — <span>#034</span> / the Missing Piece Seeker</div>
+  <div class="ver">ver. α</div>
+</header>
+
+<div class="api-bar">
+  <label>ANTHROPIC API KEY</label>
+  <input type="password" id="apiKeyInput" placeholder="sk-ant-..." autocomplete="off">
+  <button class="api-save-btn" onclick="saveApiKey()">SAVE</button>
+</div>
+
+<main>
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step active" id="step1">
+      <div class="step-num">1</div>
+      <span>問いを立てる</span>
+    </div>
+    <div class="step-sep">›</div>
+    <div class="step" id="step2">
+      <div class="step-num">2</div>
+      <span>主張を選ぶ</span>
+    </div>
+    <div class="step-sep">›</div>
+    <div class="step" id="step3">
+      <div class="step-num">3</div>
+      <span>5ゾーンを埋める</span>
+    </div>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div id="phase-1">
+    <p class="big-question">
+      あなたのテーマを研究している人たちが、<br>
+      <em>見落としていると思うことは何ですか？</em>
+    </p>
+    <textarea class="input-area" id="userMoyamoya" placeholder="直感でいい。論文を読んでいて、「なんかズレてる」と感じることを書いてみてください。" rows="4"></textarea>
+    <p class="input-hint">※ まず Zone C（主張の仮説）を3つ提案します</p>
+    <div id="phase1-error"></div>
+    <button class="submit-btn" id="submitBtn" onclick="generateProposals()">
+      Zone C を提案してもらう →
+    </button>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div id="phase-2">
+    <div class="phase2-header">
+      <h2>ZONE C — SO WHAT / NEW CLAIM</h2>
+      <p>3つの型から選んでください。クリックして選択、鉛筆アイコンで編集できます。</p>
+    </div>
+    <div class="proposals-grid" id="proposalsGrid"></div>
+    <div id="phase2-error"></div>
+    <button class="next-btn" id="expandBtn" disabled onclick="expandZones()">
+      5ゾーンを展開する →
+    </button>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div id="phase-3">
+    <div class="zones-grid" id="zonesGrid">
+
+      <!-- Zone A -->
+      <div class="zone" style="background:var(--zone-a);">
+        <div class="zone-label">ZONE A — WHAT</div>
+        <div class="zone-title">現象・対象のイメージ</div>
+        <div class="zone-content">
+          <textarea id="zoneA" placeholder="イラスト・写真・キーワード。観察した現象を視覚的に説明するメモ。"></textarea>
+        </div>
+        <div class="zone-tags">
+          <span class="zone-tag">イラスト</span>
+          <span class="zone-tag">写真</span>
+          <span class="zone-tag">キーワード</span>
+        </div>
+        <div style="position:absolute;bottom:12px;right:16px;font-family:'Crimson Pro',serif;font-size:28px;color:rgba(0,0,0,0.06);font-weight:600;">A</div>
+      </div>
+
+      <!-- Zone B -->
+      <div class="zone" style="background:var(--zone-b);">
+        <div class="zone-label">ZONE B — WHO SAID WHAT</div>
+        <div class="zone-title">主要学説 × 5</div>
+        <div class="zone-content">
+          <textarea id="zoneB" placeholder="この現象をめぐる議論の地図。対立軸を意識して整理する。"></textarea>
+          <div class="zone-suggest" id="zoneBSuggest" style="display:none">
+            <div class="zone-suggest-label">CLAUDE SUGGEST</div>
+            <div id="zoneBSuggestText"></div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:12px;right:16px;font-family:'Crimson Pro',serif;font-size:28px;color:rgba(0,0,0,0.06);font-weight:600;">B</div>
+      </div>
+
+      <!-- Zone C (spans 2 rows) -->
+      <div class="zone zone-c">
+        <div class="zone-label">ZONE C — SO WHAT / NEW CLAIM</div>
+        <div class="zone-title">自分の主張</div>
+        <div class="zone-content">
+          <div class="claim-display" id="claimDisplay"></div>
+          <textarea id="zoneC" placeholder="ここを先に書く。" style="margin-top:16px;"></textarea>
+        </div>
+        <div class="zone-suggest" id="zoneCNote" style="margin-top:16px;">
+          <div class="zone-suggest-label">DESIGN NOTE</div>
+          ここが発表の核心。先に決める。
+        </div>
+        <div class="zone-tags" style="margin-top:12px;">
+          <span class="zone-tag">理論的貢献</span>
+          <span class="zone-tag">オリジナル</span>
+        </div>
+        <div style="position:absolute;bottom:12px;right:16px;font-family:'Crimson Pro',serif;font-size:28px;color:rgba(154,130,96,0.15);font-weight:600;">C</div>
+      </div>
+
+      <!-- Zone D -->
+      <div class="zone" style="background:var(--zone-d);">
+        <div class="zone-label">ZONE D — EVIDENCE</div>
+        <div class="zone-title">FWの証拠・観察</div>
+        <div class="zone-content">
+          <textarea id="zoneD" placeholder="自分が見た・聞いたこと。引用・エピソード・数字。"></textarea>
+          <div class="zone-suggest" id="zoneDSuggest" style="display:none">
+            <div class="zone-suggest-label">CLAUDE SUGGEST</div>
+            <div id="zoneDSuggestText"></div>
+          </div>
+        </div>
+        <div class="zone-tags" style="margin-top:8px;">
+          <span class="zone-tag">インタビュー</span>
+          <span class="zone-tag">観察記録</span>
+          <span class="zone-tag">写真</span>
+        </div>
+        <div style="position:absolute;bottom:12px;right:16px;font-family:'Crimson Pro',serif;font-size:28px;color:rgba(0,0,0,0.06);font-weight:600;">D</div>
+      </div>
+
+      <!-- Zone E -->
+      <div class="zone zone-e" style="background:var(--zone-e);">
+        <div class="zone-label">ZONE E — GAP / NEXT</div>
+        <div class="zone-title">薄いところ・次の論文</div>
+        <div class="zone-content">
+          <textarea id="zoneE" placeholder="まだ薄いところ。次に読む論文のキーワード。"></textarea>
+          <div class="zone-suggest" id="zoneESuggest" style="display:none">
+            <div class="zone-suggest-label">CLAUDE SUGGEST — 次の論文キーワード</div>
+            <div id="zoneESuggestText"></div>
+          </div>
+        </div>
+        <div style="position:absolute;bottom:12px;right:16px;font-family:'Crimson Pro',serif;font-size:28px;color:rgba(0,0,0,0.06);font-weight:600;">E</div>
+      </div>
+
+    </div>
+
+    <div class="footer-actions">
+      <button class="reset-btn" onclick="resetAll()">← 最初からやり直す</button>
+      <span>各ゾーンを埋めながら主張を磨いてください</span>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+let selectedProposal = null;
+let proposalTexts = {};
+
+// API Key
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) { localStorage.setItem('qq_api_key', key); alert('保存しました'); }
+}
+function getApiKey() {
+  return localStorage.getItem('qq_api_key') || document.getElementById('apiKeyInput').value.trim();
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('qq_api_key');
+  if (saved) document.getElementById('apiKeyInput').value = saved;
+});
+
+// Step indicator
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById('step'+i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    if (i === n) el.classList.add('active');
+  });
+}
+
+// Phase 1 → 2
+async function generateProposals() {
+  const apiKey = getApiKey();
+  if (!apiKey) { showError('phase1-error', 'APIキーを入力してください'); return; }
+  const userText = document.getElementById('userMoyamoya').value.trim();
+  if (!userText) { showError('phase1-error', '何か書いてください'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 考えています...';
+  clearError('phase1-error');
+
+  const systemPrompt = `あなたは文化人類学の論文指導の専門家です。
+学生が「見落とされていること」を直感で語った文章から、Zone C（主張・新しいクレーム）の仮説を3つ提案してください。
+
+以下の3つの型を必ず使ってください：
+1. 再解釈型（Reinterpretation）：「〇〇は従来△△として理解されてきたが、□□という視点から見ると、××として再解釈できる」
+2. 反証型（Counter-evidence）：「〇〇学説は△△地域・時代では成立する。しかし□□という条件下では逆の現象が観察される」
+3. 概念拡張型（Concept extension）：「△△という概念はもともと〇〇の文脈で使われてきた。しかし□□という現象を分析するときにも有効である」
+
+必ず以下のJSON形式のみで返してください（マークダウン不要）：
+{"proposals":[{"type":"再解釈型","label":"Reinterpretation","text":"提案文章"},{"type":"反証型","label":"Counter-evidence","text":"提案文章"},{"type":"概念拡張型","label":"Concept extension","text":"提案文章"}]}`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userText }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content[0].text.trim();
+    const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderProposals(json.proposals);
+    document.getElementById('phase-1').style.display = 'none';
+    document.getElementById('phase-2').style.display = 'block';
+    setStep(2);
+  } catch(e) {
+    showError('phase1-error', 'エラー: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = 'Zone C を提案してもらう →';
+  }
+}
+
+function renderProposals(proposals) {
+  const grid = document.getElementById('proposalsGrid');
+  grid.innerHTML = '';
+  proposalTexts = {};
+  proposals.forEach((p, i) => {
+    proposalTexts[i] = p.text;
+    const card = document.createElement('div');
+    card.className = 'proposal-card';
+    card.dataset.index = i;
+    card.innerHTML = `
+      <div class="proposal-type">${p.label.toUpperCase()} — ${p.type}</div>
+      <div class="proposal-text" id="ptext-${i}">${p.text}</div>
+      <textarea class="proposal-edit" id="pedit-${i}" rows="3">${p.text}</textarea>
+      <button class="edit-toggle" onclick="toggleEdit(${i}, event)">✏ 編集</button>
+    `;
+    card.addEventListener('click', (e) => {
+      if (e.target.classList.contains('edit-toggle') || e.target.tagName === 'TEXTAREA') return;
+      selectProposal(i);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function toggleEdit(i, e) {
+  e.stopPropagation();
+  const edit = document.getElementById('pedit-'+i);
+  const text = document.getElementById('ptext-'+i);
+  if (edit.style.display === 'block') {
+    proposalTexts[i] = edit.value;
+    text.textContent = edit.value;
+    edit.style.display = 'none';
+  } else {
+    edit.style.display = 'block';
+    edit.focus();
+  }
+}
+
+function selectProposal(i) {
+  selectedProposal = i;
+  document.querySelectorAll('.proposal-card').forEach((c,idx) => {
+    c.classList.toggle('selected', idx === i);
+  });
+  document.getElementById('expandBtn').disabled = false;
+}
+
+// Phase 2 → 3
+async function expandZones() {
+  if (selectedProposal === null) return;
+  const claim = proposalTexts[selectedProposal];
+  const userText = document.getElementById('userMoyamoya').value.trim();
+  const apiKey = getApiKey();
+
+  const btn = document.getElementById('expandBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 展開中...';
+
+  const systemPrompt = `あなたは文化人類学の論文指導の専門家です。
+学生の主張（Zone C）と元の観察から、論文の骨格を補助するサジェストをJSONで返してください。
+
+必ず以下のJSON形式のみで返してください：
+{"zoneB_suggest":"Zone Bに入れるべき主要学説・対立軸の候補（100字以内）","zoneD_suggest":"Zone Dで集めるべき証拠・観察の具体的な方向（100字以内）","zoneE_keywords":"次に読むべき論文のキーワード3〜5個（カンマ区切り）"}`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: `観察：${userText}\n主張：${claim}` }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content[0].text.trim();
+    const json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+
+    // Set Zone C
+    document.getElementById('claimDisplay').textContent = claim;
+    document.getElementById('zoneC').value = claim;
+
+    // Set suggests
+    document.getElementById('zoneBSuggestText').textContent = json.zoneB_suggest;
+    document.getElementById('zoneBSuggest').style.display = 'block';
+    document.getElementById('zoneDSuggestText').textContent = json.zoneD_suggest;
+    document.getElementById('zoneDSuggest').style.display = 'block';
+    document.getElementById('zoneESuggestText').textContent = json.zoneE_keywords;
+    document.getElementById('zoneESuggest').style.display = 'block';
+
+    document.getElementById('phase-2').style.display = 'none';
+    document.getElementById('phase-3').style.display = 'block';
+    setStep(3);
+  } catch(e) {
+    showError('phase2-error', 'エラー: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '5ゾーンを展開する →';
+  }
+}
+
+function resetAll() {
+  if (!confirm('最初からやり直しますか？')) return;
+  document.getElementById('userMoyamoya').value = '';
+  document.getElementById('phase-1').style.display = 'block';
+  document.getElementById('phase-2').style.display = 'none';
+  document.getElementById('phase-3').style.display = 'none';
+  selectedProposal = null;
+  setStep(1);
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.innerHTML = 'Zone C を提案してもらう →';
+}
+
+function showError(id, msg) { document.getElementById(id).innerHTML = `<div class="error-msg">${msg}</div>`; }
+function clearError(id) { document.getElementById(id).innerHTML = ''; }
+</script>
+</body>
+</html>
